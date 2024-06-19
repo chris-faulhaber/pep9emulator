@@ -1,19 +1,12 @@
 package main
 
+import "pep9emulator/computer"
+
 func main() {
-	initialize()
-	loadProgram()
-	executeVonNeumann()
-}
+	p := computer.Pep9Computer{}
+	program := []byte{0x00}
 
-func initialize() {
-
-}
-
-func loadProgram() {
-
-}
-
-func executeVonNeumann() {
-
+	p.Initialize()
+	p.LoadProgram(program)
+	p.ExecuteVonNeumann()
 }
