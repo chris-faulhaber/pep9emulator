@@ -20,8 +20,8 @@ type Memory struct {
 	Ram [65535]uint8
 }
 
-func (c *Memory) ReadByte(location uint16) uint16 {
-	return uint16(c.Ram[location])
+func (c *Memory) ReadByte(location uint16) uint8 {
+	return c.Ram[location]
 }
 
 func (c *Memory) ReadWord(location uint16) uint16 {

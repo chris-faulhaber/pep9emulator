@@ -31,15 +31,16 @@ func TestLoadProgram(t *testing.T) {
 }
 
 func TestExecuteVonNeumann(t *testing.T) {
+	expected := uint8(0x42)
 	p := computer.Pep9Computer{}
 	p.Initialize()
 
 	//A simple program that loads 0x48 into the A register
-	p.LoadProgram([]byte{0xD1, 0x00, 0x04, 0x00, 0x48})
+	p.LoadProgram([]byte{0xD1, 0x00, 0x04, 0x00, expected})
 	p.ExecuteVonNeumann()
 
-	if p.A != 0x0048 {
-		t.Errorf("Expected %b got %b", 0x48, p.A)
+	if p.A != uint16(expected) {
+		t.Errorf("Expected %b got %b", expected, p.A)
 		t.FailNow()
 	}
 }
