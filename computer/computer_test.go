@@ -14,7 +14,7 @@ func TestLoadByteImmediate(t *testing.T) {
 	p.Operand = 0xBEEF
 	p.A = 0x0000
 
-	p.loadByte()
+	p.load()
 
 	if p.A != uint16(expected) {
 		t.Errorf("Expected %b got %b", expected, p.A)
@@ -35,7 +35,7 @@ func TestLoadByteDirect(t *testing.T) {
 	p.Operand = 0xBEEF
 	p.A = 0x0000
 
-	p.loadByte()
+	p.load()
 
 	if p.A != uint16(expected) {
 		t.Errorf("Expected %b got %b", expected, p.A)
