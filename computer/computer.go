@@ -32,20 +32,32 @@ func (c *Pep9Computer) ExecuteVonNeumann() {
 func (c *Pep9Computer) load() {
 	var result uint16
 	var loadFunc func(location uint16) uint16
+	var isWord bool
 
 	switch c.OpCode & 0x10 {
 	case 0x00: // Word
 		loadFunc = c.ReadWord
+		isWord = true
 	case 0x10: // Byte
 		loadFunc = c.ReadByte
+		isWord = false
 	}
 
 	switch c.OpCode & 0x07 {
 	case 0: // Immediate
-		result = uint16(uint8(c.Operand))
+		if isWord {
+			result = c.Operand
+		} else {
+			result = uint16(uint8(c.Operand))
+		}
+
 		break
 	case 1: // Direct
 		result = loadFunc(c.Operand)
+		break
+	case 2: // Indirect
+		location := c.ReadWord(c.Operand)
+		result = loadFunc(location)
 		break
 	default:
 		log.Fatal("Not yet implemented")
@@ -66,9 +78,9 @@ func (c *Pep9Computer) store() {
 
 	switch c.OpCode & 0x10 {
 	case 0x00: // Word
-		writeFunc = c.WriteByte
-	case 0x10: // Byte
 		writeFunc = c.WriteWord
+	case 0x10: // Byte
+		writeFunc = c.WriteByte
 	}
 
 	switch c.OpCode & 0x08 {
@@ -85,6 +97,10 @@ func (c *Pep9Computer) store() {
 		log.Fatal("Can't store to immediate value")
 	case 1: // Direct
 		writeFunc(value, c.Operand)
+		break
+	case 2: // Indirect
+		location := c.ReadWord(c.Operand)
+		writeFunc(value, location)
 		break
 	default:
 		log.Fatal("Not yet implemented")

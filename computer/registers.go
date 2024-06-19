@@ -35,8 +35,8 @@ func (c *Memory) WriteByte(value uint16, location uint16) {
 }
 
 func (c *Memory) WriteWord(value uint16, location uint16) {
-	c.Ram[location] = uint8(value)
-	c.Ram[location+1] = uint8(value >> 8)
+	c.Ram[location] = uint8(value >> 8)
+	c.Ram[location+1] = uint8(value)
 }
 
 func (s StatusBits) UpdateStatusBits(negative, zero, carry, overflow *bool) {

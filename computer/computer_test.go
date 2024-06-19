@@ -111,21 +111,22 @@ func TestStoreByteIndirect(t *testing.T) {
 }
 
 func TestLoadWordDirect(t *testing.T) {
-	expected := uint8(0xED)
+	expected := uint16(0xFEED)
 
 	p := Pep9Computer{
 		Processor: Processor{},
 		Memory:    Memory{},
 	}
 
-	p.Ram[0xBEEF] = expected
+	p.Ram[0xBEEF] = 0xFE
+	p.Ram[0xBEF0] = 0xED
 	p.OpCode = 0xC1
 	p.Operand = 0xBEEF
 	p.A = 0x0000
 
 	p.load()
 
-	if p.A != uint16(expected) {
+	if p.A != 0xFEED {
 		t.Errorf("Expected %b got %b", expected, p.A)
 		t.FailNow()
 	}
@@ -183,6 +184,7 @@ func TestStoreWordDirect(t *testing.T) {
 	}
 
 	p.Ram[0xBEEF] = 0x00
+	p.Ram[0xBEF0] = 0x00
 	p.OpCode = 0xC1
 	p.Operand = 0xBEEF
 	p.A = 0xF00D
@@ -190,7 +192,7 @@ func TestStoreWordDirect(t *testing.T) {
 	p.store()
 
 	if p.Ram[0xBEEF] != expected1 {
-		t.Errorf("Expected %b got %b", expected1, p.Ram[0xBEF0])
+		t.Errorf("Expected %b got %b", expected1, p.Ram[0xBEEF])
 		t.FailNow()
 	}
 
@@ -217,13 +219,13 @@ func TestStoreWordIndirect(t *testing.T) {
 
 	p.store()
 
-	if p.Ram[0xF00D] != 0x12 {
-		t.Errorf("Expected 0x00010010 got %b", p.Ram[0xF00D])
+	if p.Ram[0xF00D] != 0x77 {
+		t.Errorf("Expected %b got %b", 0x77, p.Ram[0xF00D])
 		t.FailNow()
 	}
 
-	if p.Ram[0xF00E] != 0x34 {
-		t.Errorf("Expected 00111000 got %b", p.Ram[0xF00E])
+	if p.Ram[0xF00E] != 0x88 {
+		t.Errorf("Expected %b got %b", 0x88, p.Ram[0xF00E])
 		t.FailNow()
 	}
 }
