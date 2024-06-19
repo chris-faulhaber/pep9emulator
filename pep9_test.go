@@ -31,5 +31,15 @@ func TestLoadProgram(t *testing.T) {
 }
 
 func TestExecuteVonNeumann(t *testing.T) {
+	p := computer.Pep9Computer{}
+	p.Initialize()
 
+	//A simple program that loads 0x48 into the A register
+	p.LoadProgram([]byte{0xD1, 0x00, 0x04, 0x00, 0x48})
+	p.ExecuteVonNeumann()
+
+	if p.A != 0x0048 {
+		t.Errorf("Expected %b got %b", 0x48, p.A)
+		t.FailNow()
+	}
 }
