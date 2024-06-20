@@ -99,6 +99,13 @@ func (c *Pep9Computer) load() {
 	case 0x08:
 		c.X = result
 	}
+
+	c.N = isNegative(result)
+	c.Z = result == 0 // Set 'Z' if the result is zero.
+}
+
+func isNegative(value uint16) bool {
+	return value&0x8000 != 0 // Set 'N' if the result is negative (the leftmost bit is set).
 }
 
 func (c *Pep9Computer) store() {

@@ -43,6 +43,27 @@ func TestBranchLessEqual(t *testing.T) {
 	}
 }
 
+func TestBranchLessEqualNegative(t *testing.T) {
+	expected := uint16(0x0000)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x14
+	p.Operand = 0xBEEF
+	p.N = false
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
 func TestBranchLess(t *testing.T) {
 	expected := uint16(0xBEEF)
 

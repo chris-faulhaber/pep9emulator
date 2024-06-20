@@ -38,18 +38,3 @@ func (c *Memory) WriteWord(value uint16, location uint16) {
 	c.Ram[location] = uint8(value >> 8)
 	c.Ram[location+1] = uint8(value)
 }
-
-func (s StatusBits) UpdateStatusBits(negative, zero, carry, overflow *bool) {
-	if negative != nil {
-		s.N = *negative
-	}
-	if zero != nil {
-		s.Z = *zero
-	}
-	if carry != nil {
-		s.C = *carry
-	}
-	if overflow != nil {
-		s.V = *overflow
-	}
-}
