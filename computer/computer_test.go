@@ -2,6 +2,197 @@ package computer
 
 import "testing"
 
+func TestBranchUnconditionally(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x12
+	p.Operand = expected
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestBranchLessEqual(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x14
+	p.Operand = expected
+	p.N = true
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestBranchLess(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x16
+	p.Operand = expected
+	p.N = true
+	p.Z = false
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestBranchEqual(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x18
+	p.Operand = expected
+	p.Z = true
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestBranchNotEqual(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x1A
+	p.Operand = expected
+	p.Z = false
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestBranchGreaterEqual(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x1C
+	p.Operand = expected
+	p.Z = false
+	p.N = false
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestBranchGreater(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x1E
+	p.Operand = expected
+	p.Z = false
+	p.N = false
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestBranchOverflow(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x20
+	p.Operand = expected
+	p.V = true
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestBranchCarry(t *testing.T) {
+	expected := uint16(0xBEEF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x1A
+	p.Operand = expected
+	p.C = true
+	p.PC = 0x0000
+
+	p.branch()
+
+	if p.PC != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
 func TestLoadByteImmediate(t *testing.T) {
 	expected := uint8(0xEF)
 
