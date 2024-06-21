@@ -2,6 +2,78 @@ package computer
 
 import "testing"
 
+func TestCompare(t *testing.T) {
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0xA0
+	p.Operand = 0x1234
+	p.A = 0x1234
+
+	p.compare()
+
+	if !p.Z || p.N {
+		t.Errorf("Expected true,false got %t, %t", p.Z, p.N)
+		t.FailNow()
+	}
+}
+
+func TestCompareNegative(t *testing.T) {
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0xA0
+	p.Operand = 0x0001
+	p.A = 0x1234
+
+	p.compare()
+
+	if !p.N {
+		t.Errorf("Expected true got %t", p.N)
+		t.FailNow()
+	}
+}
+
+func TestCompareOverflow(t *testing.T) {
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0xA0
+	p.Operand = 0x1
+	p.A = 0xF
+
+	p.compare()
+
+	if !p.V {
+		t.Errorf("Expected true got %t", p.V)
+		t.FailNow()
+	}
+}
+
+func TestCompareCarry(t *testing.T) {
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0xA0
+	p.Operand = 0xFFFF
+	p.A = 0xFFFF
+
+	p.compare()
+
+	if !p.C {
+		t.Errorf("Expected true got %t", p.C)
+		t.FailNow()
+	}
+}
+
 func TestBranchUnconditionally(t *testing.T) {
 	expected := uint16(0xBEEF)
 

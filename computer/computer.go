@@ -104,10 +104,6 @@ func (c *Pep9Computer) load() {
 	c.Z = result == 0 // Set 'Z' if the result is zero.
 }
 
-func isNegative(value uint16) bool {
-	return value&0x8000 != 0 // Set 'N' if the result is negative (the leftmost bit is set).
-}
-
 func (c *Pep9Computer) store() {
 	var value uint16
 	var writeFunc func(value uint16, location uint16)
@@ -115,6 +111,7 @@ func (c *Pep9Computer) store() {
 	switch c.OpCode & 0x10 {
 	case 0x00: // Word
 		writeFunc = c.WriteWord
+		break
 	case 0x10: // Byte
 		writeFunc = c.WriteByte
 	}
@@ -131,6 +128,7 @@ func (c *Pep9Computer) store() {
 	case 0:
 		// Can't store to immediate value
 		log.Fatal("Can't store to immediate value")
+		break
 	case 1: // Direct
 		writeFunc(value, c.Operand)
 		break
@@ -149,22 +147,31 @@ func (c *Pep9Computer) branch() {
 	switch c.OpCode {
 	case 0x12, 0x13: // unconditional
 		toBranch = true
+		break
 	case 0x14, 0x15: // <=
 		toBranch = c.N || c.Z
+		break
 	case 0x16, 0x17: // <
 		toBranch = c.N
+		break
 	case 0x18, 0x19: // ==
 		toBranch = c.Z
+		break
 	case 0x1A, 0x1B: // !=
 		toBranch = !c.Z
+		break
 	case 0x1C, 0x1D: // >=
 		toBranch = !c.N
+		break
 	case 0x1E, 0x1F: // >
 		toBranch = !c.N && !c.Z
+		break
 	case 0x20, 0x21: // V
 		toBranch = c.V
+		break
 	case 0x22, 0x23: // C
 		toBranch = c.C
+		break
 	default:
 		log.Fatal("Not yet implemented")
 	}
@@ -185,4 +192,58 @@ func (c *Pep9Computer) branch() {
 	if toBranch {
 		c.PC = location
 	}
+}
+
+func (c *Pep9Computer) compare() {
+	result := c.Operand - c.A
+	c.N = isNegative(result)
+	c.Z = result == 0
+	c.V = isOverflow(c.Operand, c.A)
+	c.C = isCarry(c.Operand, c.A)
+}
+
+func (c *Pep9Computer) arithmetic() {
+	var value *uint16
+
+	if c.OpCode&0x1 == 0 {
+		value = &c.A
+	} else {
+		value = &c.X
+	}
+
+	switch c.OpCode {
+	case 0x06, 0x07: //Bitwise invert
+		*value = *value ^ 0xFFFF
+		break
+	case 0x08, 0x09: // Negate
+		break
+	case 0x0A, 0x0B: // Arithmetic shift Left
+		*value = *value << 1
+		break
+	case 0x0C, 0x0D: // Arithmetic shift Right
+		*value = *value >> 1
+		break
+	case 0x0E, 0x0F: // Rotate Left
+		break
+	case 0x10, 0x11: // Rotate Right
+		break
+
+	default:
+		log.Fatal("Not yet implemented")
+	}
+
+}
+
+func isNegative(a uint16) bool {
+	return a&0x8000 != 0 // Set 'N' if the result is negative (the leftmost bit is set).
+}
+
+func isCarry(a, b uint16) bool {
+	return a > a-b
+}
+
+func isOverflow(a, b uint16) bool {
+	subResult := a - b
+	return isNegative(a) && isNegative(b) && !isNegative(subResult) ||
+		!isNegative(a) && !isNegative(b) && isNegative(subResult)
 }
