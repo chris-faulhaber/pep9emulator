@@ -76,7 +76,7 @@ func (c *Pep9Computer) load() {
 	var result uint16
 	var destination *uint16
 	result = c.loadWithMode()
-	destination = c.getRegister()
+	destination = c.getRegisterBit3()
 	*destination = result
 
 	c.N = isNegative(result)
@@ -84,7 +84,7 @@ func (c *Pep9Computer) load() {
 }
 
 func (c *Pep9Computer) store() {
-	source := c.getRegister()
+	source := c.getRegisterBit3()
 	c.storeWithMode(source)
 }
 
@@ -144,7 +144,7 @@ func (c *Pep9Computer) branch() {
 func (c *Pep9Computer) compare() {
 	var left, right uint16
 
-	right = *c.getRegister()
+	right = *c.getRegisterBit3()
 	left = c.loadWithMode()
 
 	result := left - right
@@ -156,12 +156,8 @@ func (c *Pep9Computer) compare() {
 
 func (c *Pep9Computer) unaryArithmetic() {
 	var value *uint16
-
-	if c.OpCode&0x1 == 0 {
-		value = &c.A
-	} else {
-		value = &c.X
-	}
+	oldCarry := c.C
+	value = c.getRegisterBit0()
 
 	switch c.OpCode {
 	case 0x06, 0x07: //Bitwise invert
@@ -174,10 +170,13 @@ func (c *Pep9Computer) unaryArithmetic() {
 		*value = *value << 1
 		break
 	case 0x0C, 0x0D: // Arithmetic shift Right
-		*value = *value >> 1
+		var msb uint16
+		if isNegative(*value) {
+			msb = 0x8000
+		}
+		*value = (*value >> 1) | msb
 		break
 	case 0x0E, 0x0F: // Rotate Left with Carry (RLC)
-		oldCarry := c.C
 		c.C = *value&0x8000 != 0 // The most significant bit is put into the carry flag.
 		*value = *value << 1
 		if oldCarry {
@@ -185,7 +184,6 @@ func (c *Pep9Computer) unaryArithmetic() {
 		}
 		break
 	case 0x10, 0x11: // Rotate Right with Carry (RRC)
-		oldCarry := c.C
 		c.C = *value&0x0001 != 0 // The least significant bit is put into the carry flag.
 		*value = *value >> 1
 		if oldCarry {
@@ -238,14 +236,21 @@ func (c *Pep9Computer) loadWithMode() uint16 {
 	return result
 }
 
-func (c *Pep9Computer) getRegister() *uint16 {
-	if c.OpCode&0x08 == 0 {
+func (c *Pep9Computer) getRegisterBit3() *uint16 {
+	return c.getRegister(0x08)
+}
+
+func (c *Pep9Computer) getRegisterBit0() *uint16 {
+	return c.getRegister(0x01)
+}
+
+func (c *Pep9Computer) getRegister(mask uint8) *uint16 {
+	if c.OpCode&mask == 0 {
 		return &c.A
 	} else {
 		return &c.X
 	}
 }
-
 func (c *Pep9Computer) storeWithMode(value *uint16) {
 	var writeFunc func(value uint16, location uint16)
 

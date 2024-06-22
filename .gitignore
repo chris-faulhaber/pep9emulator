@@ -21,3 +21,6 @@ vendor/
 go.work
 go.work.sum
 .idea/
+
+cover.out
+fmtcoverage.html

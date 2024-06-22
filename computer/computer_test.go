@@ -2,6 +2,46 @@ package computer
 
 import "testing"
 
+func TestInitialize(t *testing.T) {
+	expected := 0x0000
+	p := Pep9Computer{}
+	p.PC = 0xFFFF
+	p.Initialize()
+
+	if p.PC != 0x0000 {
+		t.Errorf("Expected %b got %b", expected, p.PC)
+		t.FailNow()
+	}
+}
+
+func TestLoadProgram(t *testing.T) {
+	p := Pep9Computer{}
+	expected := []byte{0x12, 0x34, 0x56}
+	p.LoadProgram(expected)
+
+	for i, val := range expected {
+		if val != p.Ram[i] {
+			t.Errorf("Expected %b got %b", val, p.Ram[i])
+			t.FailNow()
+		}
+	}
+}
+
+func TestExecuteVonNeumann(t *testing.T) {
+	expected := uint8(0x42)
+	p := Pep9Computer{}
+	p.Initialize()
+
+	//A simple program that loads 0x48 into the A register
+	p.LoadProgram([]byte{0xD1, 0x00, 0x04, 0x00, expected})
+	p.ExecuteVonNeumann()
+
+	if p.A != uint16(expected) {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
 func TestCompare(t *testing.T) {
 	p := Pep9Computer{
 		Processor: Processor{},
@@ -273,7 +313,7 @@ func TestBranchCarry(t *testing.T) {
 		Memory:    Memory{},
 	}
 
-	p.OpCode = 0x1A
+	p.OpCode = 0x22
 	p.Operand = expected
 	p.C = true
 	p.PC = 0x0000
@@ -510,6 +550,96 @@ func TestStoreWordIndirect(t *testing.T) {
 
 	if p.Ram[0xF00E] != 0x88 {
 		t.Errorf("Expected %b got %b", 0x88, p.Ram[0xF00E])
+		t.FailNow()
+	}
+}
+
+func TestBitwiseInvert(t *testing.T) {
+	expected := uint16(0xF0F0)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x06
+	p.A = 0x0F0F
+	p.unaryArithmetic()
+
+	if p.A != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestNegate(t *testing.T) {
+	expected := uint16(0xFFFF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x08
+	p.A = 0x1
+	p.unaryArithmetic()
+
+	if p.A != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestASL(t *testing.T) {
+	expected := uint16(0xAAAA)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x0A
+	p.A = 0x5555
+	p.unaryArithmetic()
+
+	if p.A != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestASRNegative(t *testing.T) {
+	expected := uint16(0xFFFE)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x0C
+	p.A = 0xFFFC
+	p.unaryArithmetic()
+
+	if p.A != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestASRPositive(t *testing.T) {
+	expected := uint16(0x0004)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x0C
+	p.A = 0x0008
+	p.unaryArithmetic()
+
+	if p.A != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
 		t.FailNow()
 	}
 }
