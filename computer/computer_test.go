@@ -85,8 +85,8 @@ func TestCompareOverflow(t *testing.T) {
 	}
 
 	p.OpCode = 0xA0
-	p.Operand = 0x1
-	p.A = 0xF
+	p.Operand = 0x7FFF
+	p.A = 0x7FFF
 
 	p.compare()
 
@@ -470,7 +470,7 @@ func TestLoadWordImmediate(t *testing.T) {
 
 	p.load()
 
-	if p.A != uint16(expected) {
+	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
 		t.FailNow()
 	}
@@ -640,6 +640,392 @@ func TestASRPositive(t *testing.T) {
 
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestROR(t *testing.T) {
+	expected := uint16(0x7FFF)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x10
+	p.A = 0xFFFF
+	p.unaryArithmetic()
+
+	if p.A != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestROL(t *testing.T) {
+	expected := uint16(0xFFFE)
+
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.OpCode = 0x0E
+	p.A = 0xFFFF
+	p.unaryArithmetic()
+
+	if p.A != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestIsCarry(t *testing.T) {
+	testsValues := []struct {
+		n1, n2   uint16
+		expected bool
+	}{
+		// Existing positive test cases
+		{0xFFFF, 0x0001, true},
+		{0xFFFE, 0x0001, false},
+		{0xFFFE, 0xFFFF, true},
+		{0x0001, 0x0001, false},
+		{0x0001, 0xFFFF, true},
+		{0x0001, 0xFFFE, false},
+
+		// Existing negative test cases
+		{0x8000, 0x7000, false},
+		{0x7000, 0x8000, false},
+		{0x8000, 0x8000, true},
+		{0xFFFF, 0xFFFF, true},
+		{0xFFFF, 0x8000, true},
+		{0x00FF, 0x0001, false},
+		{0x8000, 0x7FFF, false},
+
+		// Additional test cases
+		// Minimum possible values - no carry
+		{0x0000, 0x0000, false},
+
+		// Manipulation middle bits - no carry
+		{0x0F00, 0x00F0, false},
+
+		// Manipulation middle bits - expecting carry
+		{0x0F00, 0xF0F0, false},
+
+		// Cross-sections,  no carry
+		{0x1234, 0x4567, false},
+
+		// Cross-sections, expecting carry
+		{0xCDEF, 0xABCD, true},
+
+		// Different order of input values - no carry
+		{0x0001, 0xFFFE, false},
+		{0xFFFE, 0x0001, false},
+
+		// Different order of input values - expecting carry
+		{0x0001, 0xFFFF, true},
+		{0xFFFF, 0x0001, true},
+	}
+
+	for _, v := range testsValues {
+		if v.expected != isCarry(v.n1, v.n2) {
+			t.Errorf("left: %b, right: %b expected %t got %t", v.n1, v.n2, v.expected, isCarry(v.n1, v.n2))
+			t.FailNow()
+		}
+	}
+}
+
+func TestIsOverflow(t *testing.T) {
+	testsValues := []struct {
+		n1, n2   uint16
+		expected bool
+	}{
+		{0x7FFF, 0x7FFF, true},
+		{0x7FFE, 0x0002, true},
+		{0x7FFD, 0x0003, true},
+		{0x0002, 0x7FFE, true},
+		{0x0003, 0x7FFD, true},
+
+		//Just at the edge of overflow
+		{0x7FFF, 0x0001, true},
+		{0x0001, 0x7FFF, true},
+
+		//Just avoiding the overflow
+		{0x7FFE, 0x0001, false},
+		{0x0001, 0x7FFE, false},
+
+		//Combination of negative values that cause overflow
+		{0x8000, 0x8000, true},
+		{0x8001, 0x8FFF, true},
+		{0x8FFF, 0x8001, true},
+
+		//Just at the edge of overflow
+		{0x8000, 0x8000, true},
+
+		//Just avoiding the overflow
+		{0x8000, 0x7FFF, false},
+		{0x7FFF, 0x8000, false},
+
+		//Opposing signs never overflow
+		{0x7FFF, 0x8000, false},
+		{0x8000, 0x7FFF, false},
+		{0x0000, 0xFFFF, false},
+		{0xFFFF, 0x0000, false},
+
+		//Opposing signs never overflow
+		{0xFFFE, 0x0001, false},
+	}
+
+	for _, v := range testsValues {
+		if v.expected != isOverflow(v.n1, v.n2) {
+			t.Errorf("left: %b, right: %b expected %t got %t", v.n1, v.n2, v.expected, isOverflow(v.n1, v.n2))
+			t.FailNow()
+		}
+	}
+}
+
+func TestIsNegative(t *testing.T) {
+	testsValues := []struct {
+		n        uint16
+		expected bool
+	}{
+		{0x0000, false},
+		{0x7FFF, false},
+		{0x8000, true},
+		{0xFFFF, true},
+	}
+	for _, v := range testsValues {
+		if v.expected != isNegative(v.n) {
+			t.Errorf("value: %b expected %t got %t", v.n, v.expected, isNegative(v.n))
+			t.FailNow()
+		}
+	}
+}
+
+func TestMoveSPToA(t *testing.T) {
+	expected := uint16(0xBEEF)
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+	p.SP = expected
+	p.OpCode = 0x03
+	p.unaryArithmetic()
+	if p.A != expected {
+		t.Errorf("Expected %b got %b", expected, p.A)
+		t.FailNow()
+	}
+}
+
+func TestReturnFromCall(t *testing.T) {
+	expected := uint16(0xBEEF)
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	// Set up stack with return addressC
+	p.SP = 0x1000
+	p.Ram[0x1000] = 0xBE
+	p.Ram[0x1000+1] = 0xEF // Push 0xBEEF to the stack
+	p.OpCode = 0x01        // RET instruction
+	p.callAndReturn()
+
+	if p.PC != expected {
+		t.Errorf("Expected PC to be %b but got %b", expected, p.PC)
+		t.FailNow()
+	}
+}
+
+func TestCall(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	// Set up stack with return addressC
+	p.SP = 0x1000
+	p.PC = 0xBEEF
+	p.Operand = 0xF00D
+	p.OpCode = 0x24 // RET instruction
+	p.callAndReturn()
+
+	if p.PC != 0xF00D {
+		t.Errorf("Expected PC to be %b but got %b", 0xF00D, p.PC)
+		t.FailNow()
+	}
+
+	if p.ReadWord(p.SP) != 0xBEEF {
+		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.ReadWord(p.SP))
+		t.FailNow()
+	}
+}
+
+func TestMVSPA(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	// Set up stack with return addressC
+	p.SP = 0x1000
+	p.PC = 0xBEEF
+	p.Operand = 0xF00D
+	p.OpCode = 0x24 // RET instruction
+	p.callAndReturn()
+
+	if p.PC != 0xF00D {
+		t.Errorf("Expected PC to be %b but got %b", 0xF00D, p.PC)
+		t.FailNow()
+	}
+
+	if p.ReadWord(p.SP) != 0xBEEF {
+		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.ReadWord(p.SP))
+		t.FailNow()
+	}
+}
+
+func TestLoadFlags(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.N = true
+	p.Z = true
+	p.C = true
+	p.V = true
+
+	p.OpCode = 0x04
+	p.unaryArithmetic()
+
+	if p.A != 0x000F {
+		t.Errorf("Expected %b but got %b", 0x000F, p.A)
+		t.FailNow()
+	}
+}
+
+func TestStoreFlags(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.A = 0x000F
+	p.OpCode = 0x05
+	p.unaryArithmetic()
+
+	if !p.N {
+		t.Errorf("Negitive failed")
+		t.FailNow()
+	}
+	if !p.Z {
+		t.Errorf("Z failed")
+		t.FailNow()
+	}
+	if !p.V {
+		t.Errorf("V failed")
+		t.FailNow()
+	}
+	if !p.C {
+		t.Errorf("C failed")
+		t.FailNow()
+	}
+
+}
+
+func TestAddSubToSP(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	// Set up stack with return addressC
+	p.SP = 0x1000
+	p.OpCode = 0x50 // Add to SP
+	p.Operand = 0xAEEF
+	p.nonUnaryArithmetic()
+
+	if p.SP != 0xBEEF {
+		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.SP)
+		t.FailNow()
+	}
+	// Test Subtract from SP
+	p.OpCode = 0x58 // Subtract from SP
+	p.Operand = 0x2000
+	p.nonUnaryArithmetic()
+
+	if p.SP != 0x9EEF {
+		t.Errorf("Expected SP to be %b but got %b", 0x9EEF, p.SP)
+		t.FailNow()
+	}
+}
+
+func TestAddSubToA(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.A = 0x1000
+	p.OpCode = 0x60 // Add to SP
+	p.Operand = 0xAEEF
+	p.nonUnaryArithmetic()
+
+	if p.A != 0xBEEF {
+		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.A)
+		t.FailNow()
+	}
+	// Test Subtract from SP
+	p.OpCode = 0x70 // Subtract from SP
+	p.Operand = 0x2000
+	p.nonUnaryArithmetic()
+
+	if p.A != 0x9EEF {
+		t.Errorf("Expected SP to be %b but got %b", 0x9EEF, p.A)
+		t.FailNow()
+	}
+}
+
+func TestAndToA(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.A = 0xBEEF
+	p.OpCode = 0x80 // Add to SP
+	p.Operand = 0xFF00
+	p.nonUnaryArithmetic()
+
+	if p.A != 0xBE00 {
+		t.Errorf("Expected PC to be %b but got %b", 0xBE00, p.A)
+		t.FailNow()
+	}
+}
+
+func TestOrToA(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.A = 0x00EF
+	p.OpCode = 0x90 // Add to SP
+	p.Operand = 0xBE00
+	p.nonUnaryArithmetic()
+
+	if p.A != 0xBEEF {
+		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.A)
 		t.FailNow()
 	}
 }
