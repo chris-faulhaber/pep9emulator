@@ -1,6 +1,9 @@
 package computer
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestInitialize(t *testing.T) {
 	expected := 0x0000
@@ -1030,4 +1033,73 @@ func TestOrToA(t *testing.T) {
 		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.A)
 
 	}
+}
+
+func TestProgramLoadAndStoreWordViaStackPointer(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	expected := uint16(0xBEEF)
+
+	p.Initialize()
+	p.LoadProgram([]byte{0xC3, 0x00, 0x02, 0xE3, 0x00, 0x00, 0, 0, 0xBE, 0xEF})
+	p.SP = 0x0006 //todo
+	p.ExecuteVonNeumann()
+
+	if p.A != expected {
+		t.Errorf("Expected A to be %b but got %b", expected, p.A)
+	}
+
+	if err := memTest(p.Ram, 0x06, []uint8{0xBE, 0xEF}); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestProgramCallAndReturn(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.Initialize()
+	expected := uint16(0xBEEF)
+
+	p.LoadProgram([]byte{0x24, 0x00, 0x04, 0x00, 0xC0, 0xBE, 0xEF, 0x01})
+	p.ExecuteVonNeumann()
+
+	if p.A != expected {
+		t.Errorf("Expected A to be [0x%X] but got [0x%X]", expected, p.A)
+	}
+}
+
+func TestProgramBranch(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.Initialize()
+	expected := uint16(0xBEEF)
+
+	p.LoadProgram([]byte{0x12, 0x00, 0x04, 0, 0xC0, 0xBE, 0xEF, 0x00})
+	p.ExecuteVonNeumann()
+
+	if p.A != expected {
+		t.Errorf("Expected A to be [0x%X] but got [0x%X]", expected, p.A)
+	}
+}
+
+func memTest(mem [65535]uint8, start uint8, expected []uint8) error {
+	for i, val := range expected {
+		if mem[start+uint8(i)] != val {
+			return fmt.Errorf("expected RAM location mem[0x%X] to be [0x%X] but got [0x%X]", start+uint8(i), val, mem[start+uint8(i)])
+		}
+	}
+
+	return nil
 }
