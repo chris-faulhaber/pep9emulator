@@ -10,7 +10,6 @@ func TestInitialize(t *testing.T) {
 
 	if p.PC != 0x0000 {
 		t.Errorf("Expected %b got %b", expected, p.PC)
-		t.FailNow()
 	}
 }
 
@@ -22,7 +21,7 @@ func TestLoadProgram(t *testing.T) {
 	for i, val := range expected {
 		if val != p.Ram[i] {
 			t.Errorf("Expected %b got %b", val, p.Ram[i])
-			t.FailNow()
+
 		}
 	}
 }
@@ -38,7 +37,7 @@ func TestExecuteVonNeumann(t *testing.T) {
 
 	if p.A != uint16(expected) {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -56,7 +55,7 @@ func TestCompare(t *testing.T) {
 
 	if !p.Z || p.N {
 		t.Errorf("Expected true,false got %t, %t", p.Z, p.N)
-		t.FailNow()
+
 	}
 }
 
@@ -74,7 +73,7 @@ func TestCompareNegative(t *testing.T) {
 
 	if !p.N {
 		t.Errorf("Expected true got %t", p.N)
-		t.FailNow()
+
 	}
 }
 
@@ -92,7 +91,7 @@ func TestCompareOverflow(t *testing.T) {
 
 	if !p.V {
 		t.Errorf("Expected true got %t", p.V)
-		t.FailNow()
+
 	}
 }
 
@@ -110,7 +109,7 @@ func TestCompareCarry(t *testing.T) {
 
 	if !p.C {
 		t.Errorf("Expected true got %t", p.C)
-		t.FailNow()
+
 	}
 }
 
@@ -130,7 +129,7 @@ func TestBranchUnconditionally(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -151,7 +150,7 @@ func TestBranchLessEqual(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -172,7 +171,7 @@ func TestBranchLessEqualNegative(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -194,7 +193,7 @@ func TestBranchLess(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -215,7 +214,7 @@ func TestBranchEqual(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -236,7 +235,7 @@ func TestBranchNotEqual(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -258,7 +257,7 @@ func TestBranchGreaterEqual(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -280,7 +279,7 @@ func TestBranchGreater(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -301,7 +300,7 @@ func TestBranchOverflow(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -322,7 +321,7 @@ func TestBranchCarry(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -342,7 +341,7 @@ func TestLoadByteImmediate(t *testing.T) {
 
 	if p.A != uint16(expected) {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -363,7 +362,7 @@ func TestLoadByteDirect(t *testing.T) {
 
 	if p.A != uint16(expected) {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -386,7 +385,7 @@ func TestLoadByteIndirect(t *testing.T) {
 
 	if p.A != uint16(expected) {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -407,7 +406,7 @@ func TestStoreByteDirect(t *testing.T) {
 
 	if p.Ram[0xBEEF] != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -430,7 +429,7 @@ func TestStoreByteIndirect(t *testing.T) {
 
 	if p.Ram[0xF00D] != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -452,7 +451,7 @@ func TestLoadWordDirect(t *testing.T) {
 
 	if p.A != 0xFEED {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -472,7 +471,7 @@ func TestLoadWordImmediate(t *testing.T) {
 
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -494,7 +493,7 @@ func TestLoadWordIndirect(t *testing.T) {
 
 	if p.A != 0x1234 {
 		t.Errorf("Expected %b got %b", 0x1234, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -517,12 +516,12 @@ func TestStoreWordDirect(t *testing.T) {
 
 	if p.Ram[0xBEEF] != expected1 {
 		t.Errorf("Expected %b got %b", expected1, p.Ram[0xBEEF])
-		t.FailNow()
+
 	}
 
 	if p.Ram[0xBEF0] != expected2 {
 		t.Errorf("Expected %b got %b", expected2, p.Ram[0xBEF0])
-		t.FailNow()
+
 	}
 
 }
@@ -545,12 +544,12 @@ func TestStoreWordIndirect(t *testing.T) {
 
 	if p.Ram[0xF00D] != 0x77 {
 		t.Errorf("Expected %b got %b", 0x77, p.Ram[0xF00D])
-		t.FailNow()
+
 	}
 
 	if p.Ram[0xF00E] != 0x88 {
 		t.Errorf("Expected %b got %b", 0x88, p.Ram[0xF00E])
-		t.FailNow()
+
 	}
 }
 
@@ -568,7 +567,7 @@ func TestBitwiseInvert(t *testing.T) {
 
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -586,7 +585,7 @@ func TestNegate(t *testing.T) {
 
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -604,7 +603,7 @@ func TestASL(t *testing.T) {
 
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -622,7 +621,7 @@ func TestASRNegative(t *testing.T) {
 
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -640,12 +639,12 @@ func TestASRPositive(t *testing.T) {
 
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
 func TestROR(t *testing.T) {
-	expected := uint16(0x7FFF)
+	expected := uint16(0x87FF)
 
 	p := Pep9Computer{
 		Processor: Processor{},
@@ -653,30 +652,33 @@ func TestROR(t *testing.T) {
 	}
 
 	p.OpCode = 0x10
-	p.A = 0xFFFF
+	p.A = 0x0FFF
 	p.unaryArithmetic()
 
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
 	}
 }
 
 func TestROL(t *testing.T) {
-	expected := uint16(0xFFFE)
-
 	p := Pep9Computer{
 		Processor: Processor{},
 		Memory:    Memory{},
 	}
 
 	p.OpCode = 0x0E
-	p.A = 0xFFFF
-	p.unaryArithmetic()
 
-	if p.A != expected {
-		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+	values := []uint16{0x0F0F, 0x1E1E, 0x3C3C, 0x7878, 0xF0F0, 0xE1E1, 0xC3C3, 0x8787}
+	previous := values[len(values)-1]
+	p.C = false
+
+	for _, expected := range values {
+		p.A = previous
+		p.unaryArithmetic()
+		previous = expected
+		if p.A != expected {
+			t.Errorf("Expected %b got %b", expected, p.A)
+		}
 	}
 }
 
@@ -730,7 +732,7 @@ func TestIsCarry(t *testing.T) {
 	for _, v := range testsValues {
 		if v.expected != isCarry(v.n1, v.n2) {
 			t.Errorf("left: %b, right: %b expected %t got %t", v.n1, v.n2, v.expected, isCarry(v.n1, v.n2))
-			t.FailNow()
+
 		}
 	}
 }
@@ -779,7 +781,7 @@ func TestIsOverflow(t *testing.T) {
 	for _, v := range testsValues {
 		if v.expected != isOverflow(v.n1, v.n2) {
 			t.Errorf("left: %b, right: %b expected %t got %t", v.n1, v.n2, v.expected, isOverflow(v.n1, v.n2))
-			t.FailNow()
+
 		}
 	}
 }
@@ -797,7 +799,7 @@ func TestIsNegative(t *testing.T) {
 	for _, v := range testsValues {
 		if v.expected != isNegative(v.n) {
 			t.Errorf("value: %b expected %t got %t", v.n, v.expected, isNegative(v.n))
-			t.FailNow()
+
 		}
 	}
 }
@@ -813,7 +815,7 @@ func TestMoveSPToA(t *testing.T) {
 	p.unaryArithmetic()
 	if p.A != expected {
 		t.Errorf("Expected %b got %b", expected, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -834,7 +836,7 @@ func TestReturnFromCall(t *testing.T) {
 
 	if p.PC != expected {
 		t.Errorf("Expected PC to be %b but got %b", expected, p.PC)
-		t.FailNow()
+
 	}
 }
 
@@ -854,12 +856,12 @@ func TestCall(t *testing.T) {
 
 	if p.PC != 0xF00D {
 		t.Errorf("Expected PC to be %b but got %b", 0xF00D, p.PC)
-		t.FailNow()
+
 	}
 
 	if p.ReadWord(p.SP) != 0xBEEF {
 		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.ReadWord(p.SP))
-		t.FailNow()
+
 	}
 }
 
@@ -879,12 +881,12 @@ func TestMVSPA(t *testing.T) {
 
 	if p.PC != 0xF00D {
 		t.Errorf("Expected PC to be %b but got %b", 0xF00D, p.PC)
-		t.FailNow()
+
 	}
 
 	if p.ReadWord(p.SP) != 0xBEEF {
 		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.ReadWord(p.SP))
-		t.FailNow()
+
 	}
 }
 
@@ -905,7 +907,7 @@ func TestLoadFlags(t *testing.T) {
 
 	if p.A != 0x000F {
 		t.Errorf("Expected %b but got %b", 0x000F, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -922,19 +924,19 @@ func TestStoreFlags(t *testing.T) {
 
 	if !p.N {
 		t.Errorf("Negitive failed")
-		t.FailNow()
+
 	}
 	if !p.Z {
 		t.Errorf("Z failed")
-		t.FailNow()
+
 	}
 	if !p.V {
 		t.Errorf("V failed")
-		t.FailNow()
+
 	}
 	if !p.C {
 		t.Errorf("C failed")
-		t.FailNow()
+
 	}
 
 }
@@ -954,7 +956,7 @@ func TestAddSubToSP(t *testing.T) {
 
 	if p.SP != 0xBEEF {
 		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.SP)
-		t.FailNow()
+
 	}
 	// Test Subtract from SP
 	p.OpCode = 0x58 // Subtract from SP
@@ -963,7 +965,7 @@ func TestAddSubToSP(t *testing.T) {
 
 	if p.SP != 0x9EEF {
 		t.Errorf("Expected SP to be %b but got %b", 0x9EEF, p.SP)
-		t.FailNow()
+
 	}
 }
 
@@ -981,7 +983,7 @@ func TestAddSubToA(t *testing.T) {
 
 	if p.A != 0xBEEF {
 		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.A)
-		t.FailNow()
+
 	}
 	// Test Subtract from SP
 	p.OpCode = 0x70 // Subtract from SP
@@ -990,7 +992,7 @@ func TestAddSubToA(t *testing.T) {
 
 	if p.A != 0x9EEF {
 		t.Errorf("Expected SP to be %b but got %b", 0x9EEF, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -1008,7 +1010,7 @@ func TestAndToA(t *testing.T) {
 
 	if p.A != 0xBE00 {
 		t.Errorf("Expected PC to be %b but got %b", 0xBE00, p.A)
-		t.FailNow()
+
 	}
 }
 
@@ -1026,6 +1028,6 @@ func TestOrToA(t *testing.T) {
 
 	if p.A != 0xBEEF {
 		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.A)
-		t.FailNow()
+
 	}
 }

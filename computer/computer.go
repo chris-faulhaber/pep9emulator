@@ -5,6 +5,7 @@ import "log"
 type Pep9Computer struct {
 	Processor
 	Memory
+	HALT bool
 }
 
 func (c *Pep9Computer) Initialize() {
@@ -13,6 +14,7 @@ func (c *Pep9Computer) Initialize() {
 	c.A = 0x0000
 	c.X = 0x0000
 	c.SP = 0xFB8F
+	c.HALT = false
 }
 
 func (c *Pep9Computer) LoadProgram(program []byte) {
@@ -22,8 +24,7 @@ func (c *Pep9Computer) LoadProgram(program []byte) {
 }
 
 func (c *Pep9Computer) ExecuteVonNeumann() {
-	var HALT = uint8(0x00)
-	for c.OpCode != HALT || c.PC == 0 {
+	for !c.HALT && c.OpCode != 0x00 || c.PC == 0 {
 		c.fetch()
 		c.execute()
 	}
@@ -72,7 +73,8 @@ func (c *Pep9Computer) execute() {
 		c.store()
 		break
 	default:
-		log.Fatal("Unknown opcode")
+		log.Printf("Unknown opcode")
+		c.HALT = true
 	}
 }
 
@@ -122,7 +124,8 @@ func (c *Pep9Computer) branch() {
 		toBranch = c.C
 		break
 	default:
-		log.Fatal("Not yet implemented")
+		log.Printf("Branch opcode %s not implemented", string(c.OpCode))
+		c.HALT = true
 	}
 
 	var location uint16
@@ -175,7 +178,6 @@ func (c *Pep9Computer) traps() {
 
 func (c *Pep9Computer) unaryArithmetic() {
 	var value *uint16
-	oldCarry := c.C
 	value = c.getRegisterBit0()
 
 	switch c.OpCode {
@@ -219,19 +221,20 @@ func (c *Pep9Computer) unaryArithmetic() {
 	case 0x0E, 0x0F: // Rotate Left with Carry (RLC)
 		c.C = *value&0x8000 != 0 // The most significant bit is put into the carry flag.
 		*value = *value << 1
-		if oldCarry {
-			*value = *value | 0x1 // If the original carry was set it is reset to 0.
+		if c.C {
+			*value = *value | 0x0001
 		}
 		break
 	case 0x10, 0x11: // Rotate Right with Carry (RRC)
 		c.C = *value&0x0001 != 0 // The least significant bit is put into the carry flag.
 		*value = *value >> 1
-		if oldCarry {
+		if c.C {
 			*value = *value | 0x8000 // If the original carry was set, it is put into bit 15.
 		}
 		break
 	default:
-		log.Fatal("Not yet implemented")
+		log.Printf("Opcdoe %s yet implemented", string(c.OpCode))
+		c.HALT = true
 	}
 
 }
@@ -260,7 +263,8 @@ func (c *Pep9Computer) nonUnaryArithmetic() {
 		*dest |= value
 		break
 	default:
-		log.Fatal("Unknown opcode")
+		log.Printf("Opcdoe %s yet implemented", string(c.OpCode))
+		c.HALT = true
 	}
 }
 
@@ -339,7 +343,8 @@ func (c *Pep9Computer) storeWithMode(value *uint16) {
 	switch c.OpCode & 0x07 {
 	case 0:
 		// Can't store to immediate value
-		log.Fatal(":facepalm: Can't store to an immediate value")
+		log.Printf("Opcdoe %s is invalid :facepalm: Can't store to an immediate value", string(c.OpCode))
+		c.HALT = true
 	case 1: // Direct
 		writeFunc(*value, c.Operand)
 		break
