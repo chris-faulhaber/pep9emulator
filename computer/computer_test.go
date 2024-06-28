@@ -1094,6 +1094,24 @@ func TestProgramBranch(t *testing.T) {
 	}
 }
 
+func TestProgramInterpretation(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.Initialize()
+	expected := uint16(0xBEEF)
+
+	p.LoadProgram([]byte{0x12, 0x00, 0x04, 0, 0xC0, 0xBE, 0xEF, 0x00})
+	p.ExecuteVonNeumann()
+
+	if p.A != expected {
+		t.Errorf("Expected A to be [0x%X] but got [0x%X]", expected, p.A)
+	}
+}
+
 func memTest(mem [65535]uint8, start uint8, expected []uint8) error {
 	for i, val := range expected {
 		if mem[start+uint8(i)] != val {

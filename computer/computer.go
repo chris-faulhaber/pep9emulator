@@ -204,36 +204,68 @@ func (c *Pep9Computer) unaryArithmetic() {
 		c.N = c.A&0x04 == 0x04
 	case 0x06, 0x07: //Bitwise invert
 		*value = ^*value
+		c.N = isNegative(*value)
+		c.Z = *value == 0
 		break
 	case 0x08, 0x09: // Negate in 2's complement
+		prev := *value
 		*value = ^*value + 1
+		c.N = isNegative(*value)
+		c.Z = *value == 0
+		c.V = isNegative(prev) && !isNegative(*value) ||
+			!isNegative(prev) && isNegative(*value)
 		break
 	case 0x0A, 0x0B: // Arithmetic shift Left
+		prev := *value
 		*value = *value << 1
+		c.N = isNegative(*value)
+		c.Z = *value == 0
+		c.V = isNegative(prev) && !isNegative(*value) ||
+			!isNegative(prev) && isNegative(*value)
+		c.C = prev&0x8000 != 0 // The most significant bit is put into the carry flag.
 		break
 	case 0x0C, 0x0D: // Arithmetic shift Right
+		prev := *value
 		var msb uint16
 		if isNegative(*value) {
 			msb = 0x8000
 		}
 		*value = (*value >> 1) | msb
+		c.N = isNegative(*value)
+		c.Z = *value == 0
+		c.V = isNegative(prev) && !isNegative(*value) ||
+			!isNegative(prev) && isNegative(*value)
+		c.C = prev&0x1 != 0 // The least significant bit is put into the carry flag.
 		break
 	case 0x0E, 0x0F: // Rotate Left with Carry (RLC)
-		c.C = *value&0x8000 != 0 // The most significant bit is put into the carry flag.
+		prev := *value
 		*value = *value << 1
+
+		c.C = prev&0x8000 != 0 // The most significant bit is put into the carry flag.
 		if c.C {
 			*value = *value | 0x0001
 		}
+
+		c.N = isNegative(*value)
+		c.Z = *value == 0
+		c.V = isNegative(prev) && !isNegative(*value) ||
+			!isNegative(prev) && isNegative(*value)
 		break
 	case 0x10, 0x11: // Rotate Right with Carry (RRC)
-		c.C = *value&0x0001 != 0 // The least significant bit is put into the carry flag.
+		prev := *value
 		*value = *value >> 1
+
+		c.C = prev&0x1 != 0 // The least significant bit is put into the carry flag.
 		if c.C {
 			*value = *value | 0x8000 // If the original carry was set, it is put into bit 15.
 		}
+		c.N = isNegative(*value)
+		c.Z = *value == 0
+		c.V = isNegative(prev) && !isNegative(*value) ||
+			!isNegative(prev) && isNegative(*value)
 		break
 	default:
-		log.Printf("Opcdoe %s yet implemented", string(c.OpCode))
+		log.Printf("Opcode %s yet implemented", string(c.OpCode))
 		c.HALT = true
 	}
 
@@ -241,20 +273,29 @@ func (c *Pep9Computer) unaryArithmetic() {
 
 func (c *Pep9Computer) nonUnaryArithmetic() {
 	value := c.loadWithMode()
+	prev := value
 	dest := c.getRegisterBit3()
 
 	switch c.OpCode {
 	case 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57:
 		c.SP += value
+		c.V = isOverflow(prev, value)
+		c.C = isCarry(prev, value) // The least significant bit is put into the carry flag.
 		break
 	case 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F:
 		c.SP -= value
+		c.V = isOverflow(prev, value)
+		c.C = isCarry(prev, value) // The least significant bit is put into the carry flag.
 		break
 	case 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F:
 		*dest += value
+		c.V = isOverflow(prev, value)
+		c.C = isCarry(prev, value) // The least significant bit is put into the carry flag.
 		break
 	case 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F:
 		*dest -= value
+		c.V = isOverflow(prev, value)
+		c.C = isCarry(prev, value) // The least significant bit is put into the carry flag.
 		break
 	case 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F:
 		*dest &= value
@@ -266,6 +307,9 @@ func (c *Pep9Computer) nonUnaryArithmetic() {
 		log.Printf("Opcdoe %s yet implemented", string(c.OpCode))
 		c.HALT = true
 	}
+
+	c.N = isNegative(value)
+	c.Z = value == 0
 }
 
 func (c *Pep9Computer) loadWithMode() uint16 {
@@ -313,6 +357,8 @@ func (c *Pep9Computer) loadWithMode() uint16 {
 		result = loadFunc(location)
 	}
 
+	c.N = isNegative(result)
+	c.Z = result == 0
 	return result
 }
 
