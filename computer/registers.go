@@ -17,24 +17,42 @@ type Registers struct {
 }
 
 type Memory struct {
-	Ram [65535]uint8
+	Ram                                 [65535]uint8
+	StandardInput, StandardOutput       [256]uint8
+	StandardInputLoc, StandardOutputLoc int
 }
 
-func (c *Memory) ReadByte(location uint16) uint16 {
+func (c *Memory) LoadByte(location uint16) uint16 {
+	if location == 0xFC15 { //Standard input (byte stream)
+		value := uint16(c.StandardInput[c.StandardInputLoc])
+		c.StandardInputLoc = +1
+		if c.StandardInputLoc > 255 {
+			c.StandardInputLoc = 0
+		}
+		return value
+	}
 	return uint16(c.Ram[location])
 }
 
-func (c *Memory) ReadWord(location uint16) uint16 {
-	word := uint16(c.Ram[location]) << 8
-	word |= uint16(c.Ram[location+1])
+func (c *Memory) LoadWord(location uint16) uint16 {
+	word := c.LoadByte(location) << 8
+	word |= c.LoadByte(location + 1)
 	return word
 }
 
-func (c *Memory) WriteByte(value uint16, location uint16) {
-	c.Ram[location] = uint8(value)
+func (c *Memory) StoreByte(value uint16, location uint16) {
+	if location == 0xFC16 { //Standard input (byte stream)
+		c.StandardOutput[c.StandardOutputLoc] = uint8(value)
+		c.StandardOutputLoc = +1
+		if c.StandardOutputLoc > 255 {
+			c.StandardOutputLoc = 0
+		}
+	} else {
+		c.Ram[location] = uint8(value)
+	}
 }
 
-func (c *Memory) WriteWord(value uint16, location uint16) {
-	c.Ram[location] = uint8(value >> 8)
-	c.Ram[location+1] = uint8(value)
+func (c *Memory) StoreWord(value uint16, location uint16) {
+	c.StoreByte(uint16(uint8(value>>8)), location)
+	c.StoreByte(uint16(uint8(value)), location+1)
 }

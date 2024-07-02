@@ -862,8 +862,8 @@ func TestCall(t *testing.T) {
 
 	}
 
-	if p.ReadWord(p.SP) != 0xBEEF {
-		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.ReadWord(p.SP))
+	if p.LoadWord(p.SP) != 0xBEEF {
+		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.LoadWord(p.SP))
 
 	}
 }
@@ -887,8 +887,8 @@ func TestMVSPA(t *testing.T) {
 
 	}
 
-	if p.ReadWord(p.SP) != 0xBEEF {
-		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.ReadWord(p.SP))
+	if p.LoadWord(p.SP) != 0xBEEF {
+		t.Errorf("Expected PC to be %b but got %b", 0xBEEF, p.LoadWord(p.SP))
 
 	}
 }
@@ -1108,6 +1108,54 @@ func TestProgramInterpretation(t *testing.T) {
 	p.ExecuteVonNeumann()
 
 	if p.A != expected {
+		t.Errorf("Expected A to be [0x%X] but got [0x%X]", expected, p.A)
+	}
+}
+
+func TestProgramStdOut(t *testing.T) {
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.Initialize()
+
+	p.LoadProgram([]byte{
+		0xD0, 0x00, 0x48,
+		0xF1, 0xFC, 0x16,
+		0xD0, 0x00, 0x69,
+		0xF1, 0xFC, 0x16,
+		0x00,
+	})
+	p.ExecuteVonNeumann()
+
+	if p.Memory.StandardOutput[0] != 0x48 {
+		t.Errorf("Expected StandardOutput[0] to be [0x48] but got [0x%X]", p.Memory.StandardOutput[0])
+	}
+
+	if p.Memory.StandardOutput[1] != 0x69 {
+		t.Errorf("Expected StandardOutput[1] to be [0x69] but got [0x%X]", p.Memory.StandardOutput[1])
+	}
+}
+
+func TestProgramStdIn(t *testing.T) {
+	expected := uint8(0xC1)
+	//Initialize a new Pep9Computer
+	p := Pep9Computer{
+		Processor: Processor{},
+		Memory:    Memory{},
+	}
+
+	p.Initialize()
+	p.Memory.StandardInput[0] = expected
+	p.LoadProgram([]byte{
+		0xD1, 0xFC, 0x15,
+		0x00,
+	})
+	p.ExecuteVonNeumann()
+
+	if uint8(p.A) != expected {
 		t.Errorf("Expected A to be [0x%X] but got [0x%X]", expected, p.A)
 	}
 }

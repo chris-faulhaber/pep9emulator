@@ -31,11 +31,11 @@ func (c *Pep9Computer) ExecuteVonNeumann() {
 }
 
 func (c *Pep9Computer) fetch() {
-	c.OpCode = uint8(c.ReadByte(c.PC))
+	c.OpCode = uint8(c.LoadByte(c.PC))
 	c.PC += 1
 
 	if c.OpCode >= 0x12 { // if OpCode requires an Operand, fetch it
-		c.Operand = c.ReadWord(c.PC)
+		c.Operand = c.LoadWord(c.PC)
 		c.PC += 2
 	}
 }
@@ -158,7 +158,7 @@ func (c *Pep9Computer) callAndReturn() {
 	var location uint16
 
 	if c.OpCode == 0x01 { // Return
-		c.PC = c.ReadWord(c.SP)
+		c.PC = c.LoadWord(c.SP)
 		c.SP += 2
 	} else { // Call
 		if c.OpCode&0x1 == 0 { // immediate
@@ -167,13 +167,9 @@ func (c *Pep9Computer) callAndReturn() {
 			location = c.Operand + c.X
 		}
 		c.SP -= 2
-		c.WriteWord(c.PC, c.SP)
+		c.StoreWord(c.PC, c.SP)
 		c.PC = location
 	}
-}
-
-func (c *Pep9Computer) traps() {
-	//TODO :thinking:
 }
 
 func (c *Pep9Computer) unaryArithmetic() {
@@ -318,9 +314,9 @@ func (c *Pep9Computer) loadWithMode() uint16 {
 	var isWord bool
 
 	if c.OpCode&0x10 == 0x10 && c.OpCode >= 0xA0 { // Byte if we have too
-		loadFunc = c.ReadByte
+		loadFunc = c.LoadByte
 	} else { // Word is the default
-		loadFunc = c.ReadWord
+		loadFunc = c.LoadWord
 		isWord = true
 	}
 
@@ -336,14 +332,14 @@ func (c *Pep9Computer) loadWithMode() uint16 {
 		result = loadFunc(c.Operand)
 		break
 	case 2: // Indirect Mem[Mem[op]]
-		location := c.ReadWord(c.Operand)
+		location := c.LoadWord(c.Operand)
 		result = loadFunc(location)
 		break
 	case 3: // Stack relative Mem[SP+op]
 		result = loadFunc(c.SP + c.Operand)
 		break
 	case 4: // Stack-relative deferred Mem[Mem[SP + Op]]
-		location := c.ReadWord(c.SP + c.Operand)
+		location := c.LoadWord(c.SP + c.Operand)
 		result = loadFunc(location)
 		break
 	case 5: // Indexed Mem[Op + X]
@@ -381,9 +377,9 @@ func (c *Pep9Computer) storeWithMode(value *uint16) {
 	var writeFunc func(value uint16, location uint16)
 
 	if c.OpCode&0x10 == 0 { // Word
-		writeFunc = c.WriteWord
+		writeFunc = c.StoreWord
 	} else { // Byte
-		writeFunc = c.WriteByte
+		writeFunc = c.StoreByte
 	}
 
 	switch c.OpCode & 0x07 {
@@ -395,14 +391,14 @@ func (c *Pep9Computer) storeWithMode(value *uint16) {
 		writeFunc(*value, c.Operand)
 		break
 	case 2: // Indirect
-		location := c.ReadWord(c.Operand)
+		location := c.LoadWord(c.Operand)
 		writeFunc(*value, location)
 		break
 	case 3: // Stack relative Mem[SP+op]
 		writeFunc(*value, c.SP+c.Operand)
 		break
 	case 4: // Stack-relative deferred Mem[Mem[SP + Op]]
-		location := c.ReadWord(c.SP + c.Operand)
+		location := c.LoadWord(c.SP + c.Operand)
 		writeFunc(*value, location)
 		break
 	case 5: // Indexed Mem[Op + X]
@@ -412,7 +408,7 @@ func (c *Pep9Computer) storeWithMode(value *uint16) {
 		writeFunc(*value, c.SP+c.Operand+c.X)
 		break
 	case 7: // Stack-deferred Indexed Mem[Mem[SP + Op + X]]
-		location := c.ReadWord(c.SP + c.Operand + c.X)
+		location := c.LoadWord(c.SP + c.Operand + c.X)
 		writeFunc(*value, location)
 	}
 }
